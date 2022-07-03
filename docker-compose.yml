@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+  # auth-frontend:
+  #   build: ./auth-frontend
+  #   ports:
+  #     - '3000:3000'
+  #   tty: true
+  #   stdin_open: true
+    
+  auth-backend:
+    build: ./
+    ports:
+      - '8000:8000'
+    restart: on-failure
+    depends_on:
+      - db
+    tty: true
+    stdin_open: true
+    networks:
+      - default
+
+  db:
+    platform: linux/x86_64
+    image: mysql:8.0
+    container_name: mysqlDB
+    networks: 
+      - default
+    volumes:
+      - './db/data:/var/lib/mysql'
+      - './db/my.cnf:/etc/mysql/conf.d/my.cnf'
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_ROOT_HOST: ${DB_HOST}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    env_file:
+      - .env
+    ports:
+      - '3306:3306'
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_container
+    depends_on:
+      - db
+    environment:
+      - PMA_HOST=db # Must be the name of the what you used as the mysql service.
+      - PMA_USER=${DB_USER}
+      - PMA_PORT=${DB_PORT}
+      - PMA_PASSWORD=${DB_PASSWORD}
+    ports:
+      - 9090:80
+    restart: on-failure
+    networks:
+      - default
+
+networks: 
+  default:
