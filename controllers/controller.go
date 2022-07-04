@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -28,6 +29,13 @@ func Signup(c *fiber.Ctx) error {
 		Email:    data["email"],
 		Password: password,
 	}
+	if err := user.Validate(); err != nil {
+		c.Status(fiber.StatusBadRequest)
+		return c.JSON(models.Response {
+			Success: false,
+			Message: fmt.Sprintf("Signup:: user validation error: %v", err),
+		})
+	}
 
 	if err := database.DB.Create(&user).Error; err != nil {
 		c.Status(fiber.StatusBadRequest)
@@ -49,7 +57,7 @@ func Signup(c *fiber.Ctx) error {
 	cookie := fiber.Cookie{
 		Name: "jwt",
 		Value: token,
-		Expires: time.Now().Add(5 * time.Minute),
+		Expires: time.Now().Add(1 * time.Hour),
 		HTTPOnly: true,
 	}
 	c.Cookie(&cookie)
@@ -107,7 +115,7 @@ func Login(c *fiber.Ctx) error {
 	cookie := fiber.Cookie{
 		Name: "jwt",
 		Value: token,
-		Expires: time.Now().Add(5 * time.Minute),
+		Expires: time.Now().Add(1 * time.Hour),
 		HTTPOnly: true,
 	}
 	c.Cookie(&cookie)
