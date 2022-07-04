@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,7 +14,11 @@ func Signup(c *fiber.Ctx) error {
 	var data map[string]string
 
 	if err := c.BodyParser(&data); err != nil {
-		return err
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(models.Response {
+			Success: false,
+			Message: "Signup:: failed to parse request body",
+		})
 	}
 
 	password, _ := bcrypt.GenerateFromPassword([]byte(data["password"]), 14)
@@ -28,17 +31,18 @@ func Signup(c *fiber.Ctx) error {
 
 	if err := database.DB.Create(&user).Error; err != nil {
 		c.Status(fiber.StatusBadRequest)
-		return c.JSON(fiber.Map{
-			"message": "failed to create user",
+		return c.JSON(models.Response {
+			Success: false,
+			Message: "Signup:: failed to create user",
 		})
 	}
 
 	token, err := GenerateJWT(user)
-	fmt.Println("Signup token", token)
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "failed to login",
+		return c.JSON(models.Response {
+			Success: false,
+			Message: "Signup:: failed to generate token",
 		})
 	}
 
@@ -60,38 +64,43 @@ func Login(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&data); err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "failed to login",
+		return c.JSON(models.Response {
+			Success: false,
+			Message: "Login:: failed to parse request body",
 		})
 	}
 
 	var user models.User
 	if err := database.DB.Where("email = ?", data["email"]).First(&user).Error; err != nil {
 		c.Status(fiber.StatusBadRequest)
-		return c.JSON(fiber.Map{
-			"message": "failed to find user with corresponding email",
+		return c.JSON(models.Response{
+			Success: false,
+			Message: "Login:: failed to find user with corresponding email",
 		})
 	}
 
 	if user.Id == 0 {
 		c.Status(fiber.StatusNotFound)
-		return c.JSON(fiber.Map{
-			"message": "user not found",
+		return c.JSON(models.Response{
+			Success: false,
+			Message: "Login:: user not found",
 		})
 	}
 
 	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(data["password"])); err != nil {
 		c.Status(fiber.StatusBadRequest)
-		return c.JSON(fiber.Map{
-			"message": "incorrect password",
+		return c.JSON(models.Response{
+			Success: false,
+			Message: "Login:: incorrect password",
 		})
 	}
 
 	token, err := GenerateJWT(user)
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "failed to login",
+		return c.JSON(models.Response{
+			Success: false,
+			Message: "Login:: failed to generate token",
 		})
 	}
 
@@ -112,8 +121,9 @@ func User(c *fiber.Ctx) error {
 	claims, err := AuthenticateUser(c)
 	if err != nil {
 		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "unauthenticated",
+		return c.JSON(models.Response{
+			Success: false,
+			Message: "User:: unauthenticated user",
 		})
 	}
 
@@ -122,8 +132,10 @@ func User(c *fiber.Ctx) error {
 	
 	var user models.User
 	if err = database.DB.Where("email = ?", userEmail).First(&user).Error; err != nil {
-		return c.JSON(fiber.Map{
-			"message": "failed to create user",
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(models.Response{
+			Success: false,
+			Message: "User:: failed to find user with corresponding email",
 		})
 	}
 
@@ -135,7 +147,8 @@ func User(c *fiber.Ctx) error {
 func Logout(c *fiber.Ctx) error {
 	ExpireToken(c)
 
-	return c.JSON(fiber.Map{
-		"message": "success",
+	return c.JSON(models.Response{
+		Success: true,
+		Message: "Logout:: logout successful",
 	})
 }
