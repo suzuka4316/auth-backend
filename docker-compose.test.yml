@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  # auth-frontend:
+  #   build: ./auth-frontend
+  #   ports:
+  #     - '3000:3000'
+  #   tty: true
+  #   stdin_open: true
+    
+  auth-backend-test:
+    build: 
+      context: .
+      dockerfile: ./Dockerfile.test
+    ports:
+      - '8080:8000'
+    restart: on-failure
+    depends_on:
+      - db_test
+    tty: true
+    stdin_open: true
+    networks:
+      - default
+
+  db_test:
+    platform: linux/x86_64
+    image: mysql:8.0
+    container_name: mysqlDBTest
+    networks: 
+      - default
+    volumes:
+      - './db_test/data:/var/lib/mysql'
+      # - './db_test/my.cnf:/etc/mysql/conf.d/my.cnf'
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: ${TEST_DB_ROOT_PASSWORD}
+      MYSQL_ROOT_HOST: ${TEST_DB_HOST}
+      MYSQL_DATABASE: ${TEST_DB_NAME}
+      MYSQL_USER: ${TEST_DB_USER}
+      MYSQL_PASSWORD: ${TEST_DB_PASSWORD}
+    env_file:
+      - .env
+    ports:
+      - '3333:3306'
+
+networks: 
+  default:

@@ -3,6 +3,7 @@ This is a backend repo of a full stack authentication app. The frontend repo is 
 
 ## Script
 Run `docker compose up`
+For testing `docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit`
 
 ## Docker
 docker-compose.yml is scripted to create 3 containers. One for this backend repo, one for mysql server, and one for phpMyAdmin to check the data stored in the mysql database.
