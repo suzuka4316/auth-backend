@@ -29,20 +29,22 @@ func GenerateJWT(user models.User) (string, error) {
 	claims["exp"] = time.Now().Add(time.Hour * 1).Unix() //Token expires after 1 hour
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return token.SignedString([]byte(getAPISecret()))
+	return token.SignedString([]byte("secret"))
 }
 
 
 func AuthenticateUser(r *http.Request) (*jwt.MapClaims, error) {
 	cookie, err := r.Cookie("jwt")
 	if err != nil {
+		fmt.Printf("Authnticateuser cookie err: %v", err)
 		return &jwt.MapClaims{}, err
 	}
 
 	token, err := jwt.ParseWithClaims(cookie.Value, &jwt.MapClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return []byte(getAPISecret()), err
+		return []byte("secret"), err
 	})
 	if err != nil {
+		fmt.Printf("Authnticateuser parse err: %v", err)
 		return &jwt.MapClaims{}, err
 	}
 

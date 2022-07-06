@@ -2,10 +2,10 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/badoux/checkmail"
+	"github.com/suzuka4316/auth-backend/utils"
 	"gorm.io/gorm"
 )
 
@@ -19,28 +19,28 @@ type User struct {
 func (u *User) Validate(action string) error {
 	if strings.ToLower(action) == "login" {
 		if u.Password == "" {
-			return errors.New("password required")
+			return errors.New(utils.PasswordRequired)
 		}
 		if u.Email == "" {
-			return errors.New("email required")
+			return errors.New(utils.EmailRequired)
 		}
 		if err := checkmail.ValidateFormat(u.Email); err != nil {
-			return errors.New("invalid email")
+			return errors.New(utils.InvalidEmail)
 		}
 		return nil
 	}
 
 	if u.Name == "" {
-		return errors.New("name required")
+		return errors.New(utils.NameRequired)
 	}
 	if u.Password == "" {
-		return errors.New("password required")
+		return errors.New(utils.PasswordRequired)
 	}
 	if u.Email == "" {
-		return errors.New("email required")
+		return errors.New(utils.EmailRequired)
 	}
 	if err := checkmail.ValidateFormat(u.Email); err != nil {
-		return errors.New("invalid email")
+		return errors.New(utils.InvalidEmail)
 	}
 	return nil
 }
@@ -57,16 +57,14 @@ func (u *User) SaveUser(db *gorm.DB, hashedPassword []byte) (*User, error) {
 		return &User{}, err
 	}
 
-	return u, nil
+	return &newUser, nil
 }
 
 func GetUserByEmail(db *gorm.DB, email interface{}) (*User, error) {
 	var user User
 	if err := db.Debug().Where("email = ?", email).First(&user).Error; err != nil {
-		fmt.Printf("GetUserByEmail err %v", err)
 		return &User{}, err
 	}
 
-	fmt.Printf("GetUserByEmail user %v", user)
 	return &user, nil
 }

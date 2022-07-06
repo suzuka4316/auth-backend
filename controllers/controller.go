@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"net/http"
+
 	"github.com/suzuka4316/auth-backend/models"
 	"github.com/suzuka4316/auth-backend/responses"
+	"github.com/suzuka4316/auth-backend/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -45,7 +47,8 @@ func (s *Server) Signup(w http.ResponseWriter, r *http.Request) {
 
 	userCreated, err := user.SaveUser(s.DB, hashedPassword)
 	if err != nil {
-		responses.ERROR(w, http.StatusInternalServerError, err)
+		formattedErr := utils.FormatError(err.Error())
+		responses.ERROR(w, http.StatusInternalServerError, formattedErr)
 		return
 	}
 
@@ -83,18 +86,20 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 
 	existingUser, err := models.GetUserByEmail(s.DB, user.Email)
 	if err != nil {
-		responses.ERROR(w, http.StatusUnprocessableEntity, err)
+		formattedErr := utils.FormatError(err.Error())
+		responses.ERROR(w, http.StatusUnprocessableEntity, formattedErr)
 		return
 	}
 
 	err = VerifyPassword(existingUser.Password, user.Password)
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
-		responses.ERROR(w, http.StatusUnprocessableEntity, err)
+		formattedErr := utils.FormatError(err.Error())
+		responses.ERROR(w, http.StatusUnprocessableEntity, formattedErr)
 		return
 	}
 	
 	token, err := GenerateJWT(*existingUser)
-	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
+	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
@@ -113,7 +118,8 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 func (s *Server) User(w http.ResponseWriter, r *http.Request) {
 	claims, err := AuthenticateUser(r)
 	if err != nil {
-		responses.JSON(w, http.StatusUnauthorized, err)
+		formattedErr := utils.FormatError(err.Error())
+		responses.JSON(w, http.StatusUnauthorized, formattedErr)
 		return
 	}
 
