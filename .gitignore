@@ -16,5 +16,5 @@
 
 .env
 
-db/data/
+db/
 db_test/

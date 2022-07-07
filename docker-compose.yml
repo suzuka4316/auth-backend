@@ -28,7 +28,6 @@ services:
       - default
     volumes:
       - './db/data:/var/lib/mysql'
-      - './db/my.cnf:/etc/mysql/conf.d/my.cnf'
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}

@@ -30,7 +30,6 @@ services:
       - default
     volumes:
       - './db_test/data:/var/lib/mysql'
-      # - './db_test/my.cnf:/etc/mysql/conf.d/my.cnf'
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: ${TEST_DB_ROOT_PASSWORD}
